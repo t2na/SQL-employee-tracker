@@ -16,14 +16,17 @@ const start = () => {
             case 'View All Employees':
                 viewEmployee()
                 break
+            case 'Add Employee':
+                addEmployee()
+                break
             case 'View All Roles':
                 viewRoles()
                 break
             case 'View All Departments':
                 viewDept()
                 break
-            case 'Create Department':
-                createDept()
+            case 'Add Department':
+                addDept()
                 break
 
 
@@ -42,8 +45,16 @@ const viewEmployee = async () => {
    setTimeout(start, 2000)
 };
 
-const createEmployee = async () => {
-    const department = await inquirer.prompt([
+const addEmployee = async () => {
+
+   const [roles] = await db.promise().query('SELECT * FROM roles')
+    const roleChoices = roles.map(role => role.title);
+
+    const [employees] = await db.promise().query('SELECT * FROM employee')
+   const employeeChoices = employees.map(employee => `${employee.first_name} ${employee.last_name}`);
+   employeeChoices.push('None');
+    
+    const employee = await inquirer.prompt([
      {
          type: 'input',
          name: 'first_name',
@@ -55,22 +66,39 @@ const createEmployee = async () => {
         message: 'What is the last name of this employee?'
     },
     {
-        type: 'input',
-        name: 'roles_id',
-        message: "What is this employee's role?"
+        type: 'list',
+        name: 'role',
+        message: "What is this employee's role?",
+        choices: roleChoices
     },
     {
-        type: 'input',
+        // need to figure out how to add managers to equation
+        type: 'list',
         name: 'manager_id',
-        message: "Who is this employee's manager?"
+        message: "Who is this employee's manager?",
+        choices: employeeChoices
     }
  
      ])
-         await db.promise().query('insert into department set ?', department)
+
+     const role = roles.find(role => role.title === employee.role);
+     employee.roles_id = role.id;
  
-         console.log('department added to database');
-         setTimeout(start, 500)
- }
+     // If the user did not select 'None' for the manager, find the manager's id
+     if (employee.manager !== 'None') {
+         const manager = employees.find(manager => `${manager.first_name} ${manager.last_name}` === employee.manager);
+         employee.manager_id = manager.id;
+     }
+ 
+     // Remove the 'role' and 'manager' properties as they are not needed in the database
+     delete employee.role;
+     delete employee.manager;
+ 
+     await db.promise().query('insert into employee set ?', employee)
+ 
+     console.log('employee added to database');
+     setTimeout(start, 500)
+ };
 
 const viewRoles = async () => {
    
@@ -88,7 +116,7 @@ const viewDept = async () => {
    setTimeout(start, 2000)
 };
 
-const createDept = async () => {
+const addDept = async () => {
    const department = await inquirer.prompt([
     {
         type: 'input',

@@ -17,16 +17,17 @@ values ("CEO", 500000, 1),
 ("Lawyer", 350000, 4),
 ("Director of IT", 350000, 5);
 
-insert into employee (first_name, last_name, roles_id)
-values ("John", "Smith", 1),
-("Sarah", "Johnson", 2),
-("Michael", "Martinez", 3),
-("Emma", "Thompson", 4),
-("Brian", "Anderson", 5),
-("Olivia", "Turner", 6),
-("David", "Robinson", 7),
-("Ava", "Garcia", 8),
-("Anthony", "Rodriguez", 9),
-("Isabella", "Williams", 10);
+insert into employee (first_name, last_name, roles_id, manager_id)
+values 
+("John", "Smith", 1, NULL),
+("Sarah", "Johnson", 2, 1),
+("Michael", "Martinez", 3, 1),
+("Emma", "Thompson", 4, 1),
+("Brian", "Anderson", 5, 1),
+("Olivia", "Turner", 6, 5),
+("David", "Robinson", 7, 2),
+("Ava", "Garcia", 8, 3),
+("Anthony", "Rodriguez", 9, 1),
+("Isabella", "Williams", 10, 4);
 
 -- just hard code the seed data for the id's
