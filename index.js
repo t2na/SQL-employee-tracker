@@ -106,20 +106,73 @@ const addEmployee = async () => {
      setTimeout(start, 500)
  };
 
-const updateEmployee = async () => {
-
-    const [employees] = await db.promise().query('SELECT * FROM employee')
+ const updateEmployee = async () => {
+    const [employees] = await db.promise().query('SELECT * FROM employee');
     const employeeChoices = employees.map(employee => ({name: `${employee.first_name} ${employee.last_name}`, value: employee.id}));
 
-    const employee = await inquirer.prompt ([
+    const selectedEmployee = await inquirer.prompt([
         {
             type: 'list',
             name: 'employee_id',
             message: 'Which employee would you like to update?',
             choices: employeeChoices
         }
-    ])
+    ]);
+
+    const propertiesToUpdate = ['First Name', 'Last Name', 'Role', 'Manager'];
+    for (let property of propertiesToUpdate) {
+        const updateProperty = await inquirer.prompt({
+            type: 'confirm',
+            name: 'update',
+            message: `Do you want to change their ${property}?`,
+        });
+
+        if (updateProperty.update) {
+            let new_value;
+            switch (property) {
+                case 'First Name':
+                case 'Last Name':
+                    new_value = await inquirer.prompt({
+                        type: 'input',
+                        name: property.toLowerCase().replace(' ', '_'),
+                        message: `What is the new ${property.toLowerCase()}?`,
+                    });
+                    break;
+                case 'Role':
+                    const [roles] = await db.promise().query('SELECT * FROM roles')
+                    const roleChoices = roles.map(role => ({name: role.title, value: role.id}));
+                    new_value = await inquirer.prompt({
+                        type: 'list',
+                        name: 'roles_id',
+                        message: `What is the new ${property.toLowerCase()}?`,
+                        choices: roleChoices
+                    });
+                    break;
+                case 'Manager':
+                    new_value = await inquirer.prompt({
+                        type: 'list',
+                        name: 'manager_id',
+                        message: `Who is the new ${property.toLowerCase()}?`,
+                        choices: employeeChoices
+                    });
+                    break;
+            }
+            // replace spaces in property name to match column name in DB
+            let property_db = property.toLowerCase().replace(' ', '_');
+            if (property_db === 'role') {
+                property_db = 'roles_id';
+            } else if (property_db === 'manager') {
+                property_db = 'manager_id';
+            }
+            await db.promise().query(`UPDATE employee SET ${property_db} = ? WHERE id = ?`, [new_value[property_db], selectedEmployee.employee_id]);
+            console.log(`Employee's ${property} has been updated.`);
+        }
+    }
+
+    setTimeout(start, 500);
 }
+
+
 
 const viewRoles = async () => {
    
